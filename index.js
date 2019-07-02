@@ -63,7 +63,6 @@ class Cup {
         if(this.id == -1 || this.id === undefined) return null;
         let url = EndPoint.Board + `${this.id}/`+query;
         let data = await Request(url);
-        data = JSON.parse(data);
         if(!data.result) return null;
         data = data.data[0];
         data.url = url;
