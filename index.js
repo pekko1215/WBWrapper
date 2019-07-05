@@ -1,10 +1,28 @@
 const Request = (() => {
     if (typeof window !== 'undefined') {
-        return (url) => fetch(url).then(d => d.json());
+
+        return async(url, nocache) => {
+            let cache = localStorage.getItem('dataCache') || '{}';
+            cache = JSON.parse(cache);
+
+            if (url in cache) {
+                return cache[url];
+            }
+            let data = await fetch(url);
+            data = await data.json();
+
+            if (!nocache) {
+                cache[url] = data;
+                localStorage.setItem('dataCache', JSON.stringify(cache));
+            };
+            return data;
+        };
     } else {
         return (url) => new Promise(r => {
+
             require('request')(url, (e, req, body) => {
-                r(JSON.parse(body));
+                let data = JSON.parse(body);
+                r(data);
             })
         })
     }
@@ -60,10 +78,11 @@ class Cup {
         this.last = obj.last;
         this.id = obj.id;
     }
-    async getBoardInfomation(query) {
+    async getBoardInfomation(query, nocache) {
             if (this.id == -1 || this.id === undefined) return null;
             let url = EndPoint.Board + `${this.id}/` + query;
-            let data = await Request(url);
+            if (!this.nowPlaying) nocache = false;
+            let data = await Request(url, nocache);
             if (!data.result) return null;
             data = data.data[0];
             data.url = url;
@@ -74,7 +93,7 @@ class Cup {
          *全取得。非常に重いので非推奨
          */
     async getBoardInfomationAll() {
-            return await this.getBoardInfomation('all');
+            return await this.getBoardInfomation('all', true);
         }
         /**
          * XX:55のみ(ex: 17:55など)を取得。よほどのことがない限りこちらを推奨
@@ -86,14 +105,14 @@ class Cup {
          * 最終更新データを確認。
          */
     async getBoardInfomationLast() {
-        return await this.getBoardInfomation('last');
+        return await this.getBoardInfomation('last', true);
     }
 
     /**
      * (day+1)日目最終更新を取得。daylast/0なら1日目。
      */
     async getBoardInfomationDaylast(day) {
-        return await this.getBoardInfomation('daylast/' + day);
+        return await this.getBoardInfomation('daylast/' + day, true);
     }
 
     /**
@@ -107,22 +126,23 @@ class Cup {
      * 特定ユーザーのデータのみを返します(全取得なので非推奨)
      */
     async getBoardInfomationUser(userid) {
-        return await this.getBoardInfomation('user/' + userid);
+        return await this.getBoardInfomation('user/' + userid, true);
     }
 
     /**
      * 特定ユーザーのデータのみを、XX:55のものに絞って返します。
      */
     async getBoardInfomationUserHours(userid) {
-        return await this.getBoardInfomation(`user/${userid}/hours`);
+        return await this.getBoardInfomation(`user/${userid}/hours`, true);
     }
 }
 
 async function GetCups() {
-    let data = await Request(EndPoint.Cups);
+    let data = await Request(EndPoint.Cups, true);
     if (!data.result) return null;
     data.cups = data.cups.filter(d => d.result).map(d => new Cup(d));
     data.now_cup = data.now_cup.result ? new Cup(data.now_cup) : null;
+    if (data.now_cup !== null) data.cups[data.cups.length - 1].nowPlaying = true;
     data.url = EndPoint.Cups;
     return data;
 }
