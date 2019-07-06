@@ -11,7 +11,9 @@ const Request = (() => {
             let data = await fetch(url);
             data = await data.json();
 
-            if (!nocache) {
+            if (!nocache && data.result) {
+                let cache = localStorage.getItem('dataCache') || '{}';
+                cache = JSON.parse(cache);
                 cache[url] = data;
                 localStorage.setItem('dataCache', JSON.stringify(cache));
             };
@@ -84,9 +86,11 @@ class Cup {
             if (!this.nowPlaying) nocache = false;
             let data = await Request(url, nocache);
             if (!data.result) return null;
-            data = data.data[0];
             data.url = url;
-            data = new Board(data, this);
+            data.data = data.data.map(d => {
+                d.url = url;
+                return new Board(d, this);
+            });
             return data;
         }
         /**
@@ -134,6 +138,19 @@ class Cup {
      */
     async getBoardInfomationUserHours(userid) {
         return await this.getBoardInfomation(`user/${userid}/hours`, true);
+    }
+
+    /**
+     * 4日間の最終更新データを取得する。
+     * リクエスト４回投げるだけ
+     */
+    async getBoardInfomationAllDaylast() {
+        let arr = await Promise.all([0, 1, 2, 3].map(day => {
+            return this.getBoardInfomationDaylast(day);
+        }));
+        let ret = arr.shift();
+        ret.data.push(...arr.map(d => d.data[0]));
+        return ret;
     }
 }
 
