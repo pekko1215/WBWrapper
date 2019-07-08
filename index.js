@@ -149,6 +149,7 @@ class Cup {
             return this.getBoardInfomationDaylast(day);
         }));
         let ret = arr.shift();
+        if (ret.data.length == 0) ret.data.push(null)
         ret.data.push(...arr.map(d => d.data[0]));
         return ret;
     }
