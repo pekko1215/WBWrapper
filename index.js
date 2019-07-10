@@ -69,16 +69,17 @@ class Board {
                 return new Rank(d, this.teams[i]);
             })
         });
-        this.teams.forEach((team, i) => team.ranks = this.ranks[i]);
-        this.ranks.forEach((arr, i) => {
-            arr.forEach(r => {
-                if (r.team.id === -2) {
-                    r.defaultTeam = this.teams[this.ranks.findIndex(arr => {
+        this.teams.forEach((team, i) => {
+            team.ranks = this.ranks[i];
+            if (team.id == -2) {
+                team.ranks.forEach(r => {
+                    r.defaultTeam = this.teams[this.ranks.findIndex((arr, i) => {
+                        if (this.teams[i].id < 0) return;
                         return arr.find(rank => rank.userId === r.userId)
                     })];
-                }
-            })
-        })
+                })
+            }
+        });
     }
 }
 
