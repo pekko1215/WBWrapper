@@ -70,6 +70,15 @@ class Board {
             })
         });
         this.teams.forEach((team, i) => team.ranks = this.ranks[i]);
+        this.ranks.forEach((arr, i) => {
+            arr.forEach(r => {
+                if (r.team.id === -2) {
+                    r.defaultTeam = this.teams[this.ranks.findIndex(arr => {
+                        return arr.find(rank => rank.userId === r.userId)
+                    })];
+                }
+            })
+        })
     }
 }
 
