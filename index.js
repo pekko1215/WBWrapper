@@ -5,7 +5,7 @@ const Request = (() => {
             let cache = localStorage.getItem('dataCache') || '{}';
             cache = JSON.parse(cache);
 
-            if (url in cache) {
+            if (url in cache && !nocache) {
                 return cache[url];
             }
             let data = await fetch(url);
