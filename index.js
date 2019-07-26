@@ -4,7 +4,7 @@ const Request = (() => {
         return async(url, nocache) => {
             let cache = localStorage.getItem('dataCache') || '{}';
             cache = JSON.parse(cache);
-
+            console.log({ url, nocache })
             if (url in cache && !nocache) {
                 return cache[url];
             }
@@ -93,7 +93,7 @@ class Cup {
     async getBoardInfomation(query, nocache) {
             if (this.id == -1 || this.id === undefined) return null;
             let url = EndPoint.Board + `${this.id}/` + query;
-            if (!this.nowPlaying) nocache = false;
+            // if (!this.nowPlaying) nocache = false;
             let data = await Request(url, nocache);
             if (!data.result) return null;
             data.url = url;
